@@ -1,0 +1,11 @@
+# HostCP Agent Configuration
+
+api_key: "your-api-key-here"
+port: 8443
+tls_cert: "/etc/hostcp-agent/tls/cert.pem"
+tls_key: "/etc/hostcp-agent/tls/key.pem"
+
+features:
+  web: true
+  email: false
+  dns: false
