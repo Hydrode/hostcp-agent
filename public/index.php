@@ -6,7 +6,7 @@ namespace HostCP\Agent;
 
 spl_autoload_register(function (string $class): void {
     if (str_starts_with($class, 'HostCP\\Agent\\')) {
-        $path = __DIR__ . '/../src/' . str_replace('\\', '/', substr($class, 14)) . '.php';
+        $path = __DIR__ . '/../src/' . str_replace('\\', '/', substr($class, 13)) . '.php';
         if (is_file($path)) {
             require_once $path;
         }

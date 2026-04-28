@@ -27,7 +27,9 @@ final class WebsiteHandler extends AbstractHandler
 
         $docRoot = "/var/www/{$domain}/public_html";
         if (!is_dir($docRoot) && !mkdir($docRoot, 0755, true) && !is_dir($docRoot)) {
-            $res->json(500, ['error' => 'unable to create document root']);
+            $err = error_get_last();
+            $msg = is_array($err) && isset($err['message']) ? (string) $err['message'] : 'permission denied';
+            $res->json(500, ['error' => 'unable to create document root', 'detail' => $msg]);
             return;
         }
 

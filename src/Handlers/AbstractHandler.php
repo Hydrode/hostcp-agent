@@ -60,10 +60,20 @@ abstract class AbstractHandler
             return false;
         }
 
-        [, $ok] = $this->run(['systemctl', 'reload', "php{$phpVersion}-fpm"]);
+        [$out, $ok] = $this->run(['systemctl', 'reload', "php{$phpVersion}-fpm"]);
         if (!$ok) {
-            $res->json(500, ['error' => "unable to reload php{$phpVersion}-fpm"]);
-            return false;
+            [$outRestart, $okRestart] = $this->run(['systemctl', 'restart', "php{$phpVersion}-fpm"]);
+            if (!$okRestart) {
+                [$outStart, $okStart] = $this->run(['systemctl', 'start', "php{$phpVersion}-fpm"]);
+                if (!$okStart) {
+                    $detail = trim($out . "\n" . $outRestart . "\n" . $outStart);
+                    $res->json(500, [
+                        'error' => "unable to reload php{$phpVersion}-fpm",
+                        'detail' => $detail,
+                    ]);
+                    return false;
+                }
+            }
         }
 
         return true;
@@ -177,7 +187,12 @@ abstract class AbstractHandler
      */
     protected function run(array $cmd): array
     {
-        $escaped  = array_map(static fn(string $p): string => escapeshellarg($p), $cmd);
+        $withSudo = $cmd;
+        if (function_exists('posix_geteuid') && posix_geteuid() !== 0 && is_file('/usr/bin/sudo')) {
+            array_unshift($withSudo, 'sudo');
+        }
+
+        $escaped  = array_map(static fn(string $p): string => escapeshellarg($p), $withSudo);
         $command  = implode(' ', $escaped) . ' 2>&1';
         $output   = [];
         $exitCode = 0;
