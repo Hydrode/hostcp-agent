@@ -39,11 +39,6 @@ final class PhpHandler extends AbstractHandler
             }
         }
 
-        if ($currentVersion !== '' && $currentVersion !== $newVersion) {
-            @unlink("/etc/php/{$currentVersion}/fpm/pool.d/{$safe}.conf");
-            $this->run(['systemctl', 'reload', "php{$currentVersion}-fpm"]);
-        }
-
         $vhostPath = "/etc/nginx/sites-available/{$domain}.conf";
         if (!is_file($vhostPath)) {
             $res->json(404, ['error' => 'vhost not found']);
@@ -68,6 +63,11 @@ final class PhpHandler extends AbstractHandler
         if (file_put_contents($vhostPath, $vhost) === false) {
             $res->json(500, ['error' => 'unable to write vhost']);
             return;
+        }
+
+        if ($currentVersion !== '' && $currentVersion !== $newVersion) {
+            @unlink("/etc/php/{$currentVersion}/fpm/pool.d/{$safe}.conf");
+            $this->run(['systemctl', 'reload', "php{$currentVersion}-fpm"]);
         }
 
         if (!$this->writePool($domain, $newVersion, $res)) {
